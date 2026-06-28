@@ -361,7 +361,14 @@ volumes: { postgres-data: , redis-data: }
 
 ---
 
-## 11. 남은 보완 항목 (체크리스트)
+## 11. 문서
+
+- **[PHASE0_PLAN.md](./PHASE0_PLAN.md)** - Phase 0 실행계획: TypeScript/React/Next.js 학습 가이드 (Python 개발자용)
+- **[PHASE1_PLAN.md](./PHASE1_PLAN.md)** - Phase 1 실행계획: FastAPI 골격 + 인증(JWT) + Alembic
+
+---
+
+## 12. 남은 보완 항목 (체크리스트)
 
 **시작 전(상)**: 성공 지표 수치 확정 · 엔진 DTO 계약 확정 · API 요청/응답 예시 · PIPA 동의/파기 흐름 · 워커 호스트 사양·비용 실측
 **진행 중(중)**: 테스트 전략(엔진 호출 모킹 포함) · 에러/로깅 표준 · Rate Limiting · 성능 모니터링
