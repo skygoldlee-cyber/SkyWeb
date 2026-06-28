@@ -1,21 +1,29 @@
-# TypeScript/React/Next.js 학습 가이드 (정리본)
+# Phase 0 실행계획 — TypeScript / React / Next.js 학습
 
-> **대상**: Python 주력 개발자, JavaScript 입문자
-> **목표**: 피부분석 웹서버 프론트엔드에 필요한 최소한의 TypeScript/React/Next.js 습득
-> **기간**: 2-3주 (PLAN.md의 Phase 0)
+> **상위 문서**: PLAN.md §10
+> **기간(현실안)**: 2–3주
+> **완료 기준**: 간단한 **인증 + 목록 SPA**를 외부 가이드 없이 직접 구현
+> **성격**: 구현이 아니라 **역량 확보** 단계. 이후 Phase 4~7(프론트)의 선행 학습.
 >
 > **이번 개정 요지**: 최신 Next.js(15+)·shadcn CLI에 맞춰 에러 나는 코드를 수정하고,
 > 인증을 **httpOnly 쿠키 기반**으로 재작성했으며(localStorage 제거), **Zod**(JS의 Pydantic) 섹션을 추가했다.
 
 ---
 
-## 학습 전제
+## 0. 목표 한 줄
+
+Python 주력 개발자가 프론트엔드를 **혼자 만들고 오래 유지보수**할 수 있을 만큼의
+TypeScript / React / Next.js(App Router) + 쿠키 인증 패턴을 손에 익힌다.
+
+---
+
+## 1. 학습 전제
 
 ### Python 개발자가 TypeScript를 배울 때의 장점
 - **타입 시스템**: Python type hints + Pydantic에 익숙하므로 TS 타입 시스템은 친숙한 영역
 - **함수형 패턴**: `lambda`, `map`/`filter`와 유사
 - **모듈 시스템**: `import`/`export`와 유사
-- **런타임 검증**: Pydantic으로 경계를 지키던 감각이 그대로 **Zod**로 옮겨간다 (→ Day 2.5)
+- **런타임 검증**: Pydantic으로 경계를 지키던 감각이 그대로 **Zod**로 옮겨간다
 
 ### Python과의 주요 차이 (사전 인지)
 
@@ -36,11 +44,163 @@
 
 ---
 
-## Week 1: TypeScript 기초 + React 기본
+## 2. 선행 조건
 
-### Day 1-2: TypeScript 기초
+- [ ] PLAN.md 부록 A(WSL2 개발환경) 확인
+- [ ] 학습 시간 확보: SkinLens 본체·SkyPredictor 유지보수와 병행 → 하루 2~3시간 기준 버퍼 포함
 
-#### 1. 변수와 타입
+---
+
+## 3. 개발 환경 설정 (Week 1 시작 전 필수)
+
+### 3.1 Node.js 설치
+
+Node.js는 JavaScript/TypeScript의 런타임입니다. Python처럼 설치 후 터미널에서 `node` 명령어로 실행할 수 있습니다.
+
+```bash
+# 설치 확인
+node --version  # v20.x 이상 권장
+npm --version   # Node.js 설치 시 자동 포함
+```
+
+**설치 방법**:
+- **Windows**: https://nodejs.org/ 에서 LTS 버전 다운로드 및 설치
+- **WSL2 (권장)**: PLAN.md 부록 A 참조. WSL2 내에서 `curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -` 후 `sudo apt-get install -y nodejs`
+
+> **Python과의 비교**: Node.js ≈ Python, npm ≈ pip
+
+### 3.2 패키지 매니저 선택
+
+| 매니저 | 설치 명령 | 특징 | 추천 |
+|---|---|---|---|
+| **npm** | Node.js에 포함 | 표준, 느림 | 기본값 |
+| **yarn** | `npm install -g yarn` | 빠름, lock 파일 | 선택 |
+| **pnpm** | `npm install -g pnpm` | 매우 빠름, 디스크 절약 | 고급 사용자 |
+
+이 가이드는 **npm**을 기준으로 작성했습니다. 다른 매니저를 사용하려면 명령어만 변경하면 됩니다.
+
+```bash
+# npm 업그레이드
+npm install -g npm@latest
+```
+
+### 3.3 TypeScript 설치 (전역)
+
+프로젝트마다 설치할 수도 있지만, 전역 설치가 편리합니다.
+
+```bash
+npm install -g typescript
+tsc --version  # 설치 확인
+```
+
+> **Python과의 비교**: `npm install -g typescript` ≈ `pip install typescript`
+
+### 3.4 VS Code 확장 설치
+
+VS Code는 JavaScript/TypeScript 개발에 가장 적합한 IDE입니다.
+
+**필수 확장**:
+- **ESLint** (`dbaeumer.vscode-eslint`) - 코드 품질 검사
+- **Prettier** (`esbenp.prettier-vscode`) - 코드 포맷팅
+- **TypeScript Importer** (`pmneo.tsimporter`) - 자동 import 추가
+- **Auto Rename Tag** (`formulahendry.auto-rename-tag`) - HTML 태그 자동 수정
+- **Tailwind CSS IntelliSense** (`bradlc.vscode-tailwindcss`) - Tailwind 자동완성
+
+**설치 방법**: VS Code → 확장(Ctrl+Shift+X) → 검색 → 설치
+
+### 3.5 첫 프로젝트 생성 (실습용)
+
+학습을 위해 간단한 프로젝트를 먼저 생성해봅니다.
+
+#### 옵션 A: Vite (React + TypeScript) - Week 1 실습용
+
+```bash
+npm create vite@latest my-react-app -- --template react-ts
+cd my-react-app
+npm install
+npm run dev
+```
+
+브라우저에서 `http://localhost:5173` 열면 React 앱이 실행됩니다.
+
+#### 옵션 B: Next.js (TypeScript + Tailwind) - Week 2 이후
+
+```bash
+npx create-next-app@latest my-next-app --typescript --tailwind --app
+cd my-next-app
+npm run dev
+```
+
+브라우저에서 `http://localhost:3000` 열면 Next.js 앱이 실행됩니다.
+
+> **Python과의 비교**:
+> - `npm create vite@latest` ≈ `django-admin startproject` 또는 `cookiecutter`
+> - `npm install` ≈ `pip install -r requirements.txt`
+> - `npm run dev` ≈ `python manage.py runserver` 또는 `uvicorn main:app --reload`
+
+### 3.6 환경 변수 설정
+
+`.env` 파일로 환경 변수를 관리합니다.
+
+```bash
+# .env.local (프로젝트 루트)
+API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+> **Python과의 비교**: `.env` ≈ `python-dotenv`의 `.env` 파일
+
+### 3.7 Windows 환경 고려사항
+
+PLAN.md 부록 A를 참조하세요. 권장 구성:
+
+- **WSL2 + Docker Desktop**: 리눅스 환경에서 개발 (성능, 호환성 우수)
+- **VS Code Remote WSL**: WSL2에서 직접 개발
+- **프로젝트 위치**: `\\wsl$\Ubuntu\home\user\projects\...` (C:\ 드라이브 X)
+
+**순수 Windows에서 개발 시 주의사항**:
+- 파일 경경: `\` 대신 `/` 사용 (Node.js 호환성)
+- 라인 엔딩: CRLF (Windows 기본값)
+- 포트 충돌: 3000, 5173 등 사용 중인 포트 확인
+
+### 3.8 개발 서버 실행 및 중지
+
+```bash
+# 실행
+npm run dev
+
+# 중지: Ctrl + C
+```
+
+### 3.9 기본 명령어 정리
+
+| 명령 | 의미 | Python 대응 |
+|---|---|---|
+| `npm install` | 의존성 설치 | `pip install -r requirements.txt` |
+| `npm run dev` | 개발 서버 실행 | `python manage.py runserver` |
+| `npm run build` | 프로덕션 빌드 | `python setup.py build` |
+| `npm test` | 테스트 실행 | `pytest` |
+| `tsc` | TypeScript 컴파일 | `mypy` (타입 검사) |
+
+### 체크리스트
+- [ ] Node.js v20+ 설치 확인 (`node --version`)
+- [ ] npm 최신 버전 확인 (`npm --version`)
+- [ ] TypeScript 전역 설치 (`tsc --version`)
+- [ ] VS Code 필수 확장 설치 (ESLint, Prettier, Tailwind)
+- [ ] Vite 프로젝트 생성 및 실행 (`npm create vite@latest`)
+- [ ] Next.js 프로젝트 생성 및 실행 (`npx create-next-app@latest`)
+- [ ] 환경 변수 파일 `.env.local` 생성
+- [ ] Windows 환경 고려사항 확인 (WSL2 권장)
+
+---
+
+## 4. 작업 단위 (주차별)
+
+### 4.1 Week 1 — TypeScript 기초 + React 기본
+
+#### Day 1-2: TypeScript 기초
+
+##### 1. 변수와 타입
 ```typescript
 let name: string = "John";
 let age: number = 30;
@@ -59,7 +219,7 @@ interface User {
 const user: User = { id: "123", email: "test@example.com" };
 ```
 
-#### 2. 함수
+##### 2. 함수
 ```typescript
 function add(a: number, b: number): number {
   return a + b;
@@ -75,7 +235,7 @@ async function fetchUser(): Promise<User> {
 }
 ```
 
-#### 3. 인터페이스 vs 타입
+##### 3. 인터페이스 vs 타입
 ```typescript
 interface Animal { name: string; }
 interface Dog extends Animal { breed: string; }   // 확장
@@ -84,21 +244,21 @@ type ID = string | number;                          // 유니온
 type Coordinate = [number, number];                 // 튜플
 ```
 
-#### 4. 제네릭 (Python TypeVar/Generic과 유사)
+##### 4. 제네릭 (Python TypeVar/Generic과 유사)
 ```typescript
 function identity<T>(arg: T): T { return arg; }
 const num = identity<number>(42);
 const str = identity("hello");   // 추론되므로 <string> 생략 가능
 ```
 
-#### 실습
+##### 실습
 - [ ] `.ts` 파일 생성 및 `tsc`로 컴파일
 - [ ] 타입을 명시한 계산기 함수 작성
 - [ ] 인터페이스 정의 + 객체 생성
 
 ---
 
-### Day 2.5: Zod — 런타임 검증 (Pydantic의 TS판) ⭐ 신규
+#### Day 2.5: Zod — 런타임 검증 (Pydantic의 TS판) ⭐
 
 TS 타입은 **컴파일 후 사라져서 런타임에는 아무것도 검증하지 않는다.** API 응답·폼 입력처럼
 **외부에서 들어오는 데이터**는 `as User` 같은 단언으로 믿으면 안 된다(실제 모양을 보장 못 함).
@@ -132,9 +292,9 @@ const data = UserSchema.parse(await res.json());   // 안 맞으면 ZodError
 
 ---
 
-### Day 3-4: React 기본
+#### Day 3-4: React 기본
 
-#### 1. 컴포넌트
+##### 1. 컴포넌트
 ```tsx
 function Greeting({ name }: { name: string }) {
   return <h1>Hello, {name}!</h1>;
@@ -146,7 +306,7 @@ const Button = ({ onClick, children }: {
 }) => <button onClick={onClick}>{children}</button>;
 ```
 
-#### 2. State (useState)
+##### 2. State (useState)
 ```tsx
 import { useState } from "react";
 
@@ -161,7 +321,7 @@ function Counter() {
 }
 ```
 
-#### 3. Props
+##### 3. Props
 ```tsx
 interface CardProps {
   title: string;
@@ -180,7 +340,7 @@ function Card({ title, description, onEdit }: CardProps) {
 }
 ```
 
-#### 4. Effect (useEffect)
+##### 4. Effect (useEffect)
 ```tsx
 import { useEffect, useState } from "react";
 
@@ -202,19 +362,19 @@ function UserProfile({ userId }: { userId: string }) {
 > 참고: 실무에서는 이런 수동 fetch+로딩+에러 처리를 **TanStack Query**가 대체한다(Week 3에서 도입).
 > 지금은 원리를 익히기 위해 손으로 한 번 해본다.
 
-#### 실습
+##### 실습
 - [ ] Vite로 프로젝트 생성: `npm create vite@latest my-app -- --template react-ts`
 - [ ] 카운터, Todo 리스트(추가/삭제)
 - [ ] useEffect로 API 데이터 가져오기 + Zod로 응답 검증
 
 ---
 
-### Day 5-7: React 심화
+#### Day 5-7: React 심화
 
 > **변경**: 기존 가이드의 React Router 실습은 제거했다. 목표가 Next.js라면 라우팅은
 > Next의 App Router(파일 기반, Week 2)가 대체하므로 React Router 학습은 대부분 버려진다.
 
-#### 1. Context API (전역 상태)
+##### 1. Context API (전역 상태)
 ```tsx
 import { createContext, useContext, useState } from "react";
 
@@ -259,7 +419,7 @@ export function useAuth() {
 }
 ```
 
-#### 2. 조건부 렌더링 / 리스트 렌더링
+##### 2. 조건부 렌더링 / 리스트 렌더링
 ```tsx
 function UserStatus({ user }: { user: User | null }) {
   if (!user) return <div>Please login</div>;
@@ -271,23 +431,23 @@ function UserList({ users }: { users: User[] }) {
 }
 ```
 
-#### 실습
+##### 실습
 - [ ] AuthContext 구현
 - [ ] 사용자 목록 페이지
 - [ ] (라우팅은 Next에서 — 여기선 단일 화면으로 충분)
 
 ---
 
-## Week 2: Next.js 기초
+### 4.2 Week 2 — Next.js 기초
 
-### Day 8-9: 프로젝트 구조
+#### Day 8-9: 프로젝트 구조
 
-#### 1. 생성 (TypeScript + Tailwind + App Router)
+##### 1. 생성 (TypeScript + Tailwind + App Router)
 ```bash
 npx create-next-app@latest my-app --typescript --tailwind --app
 ```
 
-#### 2. App Router 구조
+##### 2. App Router 구조
 ```
 app/
 ├── layout.tsx          # 루트 레이아웃
@@ -303,7 +463,7 @@ app/
 > **BFF(Backend-for-Frontend)** 역할로, 여기서 httpOnly 쿠키를 굽고, 백엔드 URL을 숨기고,
 > CORS를 피하고, 토큰을 서버 쪽에서 다룬다. (Day 15-18에서 실제로 사용)
 
-#### 3. 레이아웃과 페이지
+##### 3. 레이아웃과 페이지
 ```tsx
 // app/layout.tsx
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -318,7 +478,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-#### 4. 동적 라우팅 — `params`는 이제 **Promise** ⭐ 수정
+##### 4. 동적 라우팅 — `params`는 이제 **Promise** ⭐ 수정
 ```tsx
 // app/analyses/[id]/page.tsx
 // Next.js 15+에서 params는 Promise이므로 await로 풀어야 한다 (14 방식은 타입 에러)
@@ -337,15 +497,15 @@ export default async function AnalysisDetail({
 //   const { id } = use(params);
 ```
 
-#### 실습
+##### 실습
 - [ ] Next 프로젝트 생성, 레이아웃 구조 파악
 - [ ] 동적 라우팅 페이지(`await params`) 작성
 
 ---
 
-### Day 10-11: 데이터 가져오기 + 환경변수
+#### Day 10-11: 데이터 가져오기 + 환경변수
 
-#### 0. 환경변수 ⭐ 신규
+##### 0. 환경변수 ⭐ 신규
 URL을 하드코딩하지 않는다.
 ```bash
 # .env.local
@@ -355,7 +515,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000  # 클라이언트에서도 필요할 
 - 서버 컴포넌트/Route Handler: `process.env.API_URL`
 - 클라이언트 컴포넌트: `process.env.NEXT_PUBLIC_API_URL` (반드시 `NEXT_PUBLIC_` 접두사)
 
-#### 1. Server Component (기본) — 쿠키를 읽어 인증 요청
+##### 1. Server Component (기본) — 쿠키를 읽어 인증 요청
 ```tsx
 // app/analyses/page.tsx  (기본이 Server Component)
 import { cookies } from "next/headers";
@@ -378,7 +538,7 @@ export default async function AnalysesPage() {
 > 이게 **쿠키 기반 인증을 택한 이유**다. 토큰이 httpOnly 쿠키에 있으면 서버 컴포넌트가
 > 그것을 읽어 백엔드에 인증 요청을 보낼 수 있다. (localStorage 토큰은 서버에서 못 읽어 모델이 깨진다.)
 
-#### 2. Client Component (인터랙티브)
+##### 2. Client Component (인터랙티브)
 ```tsx
 "use client";
 import { useState } from "react";
@@ -388,7 +548,7 @@ export default function InteractiveButton() {
 }
 ```
 
-#### 3. 로딩/에러 (`loading.tsx`, `error.tsx`)
+##### 3. 로딩/에러 (`loading.tsx`, `error.tsx`)
 ```tsx
 // app/analyses/loading.tsx
 export default function Loading() { return <div>Loading...</div>; }
@@ -405,16 +565,16 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
 }
 ```
 
-#### 실습
+##### 실습
 - [ ] Server Component로 데이터 가져오기(+쿠키)
 - [ ] Client Component 인터랙션
 - [ ] 로딩/에러 상태
 
 ---
 
-### Day 12-14: TailwindCSS + shadcn/ui
+#### Day 12-14: TailwindCSS + shadcn/ui
 
-#### 1. Tailwind 기본
+##### 1. Tailwind 기본
 ```tsx
 <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow">
   <h1 className="text-xl font-bold">Title</h1>
@@ -422,14 +582,14 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
 </div>
 ```
 
-#### 2. shadcn/ui 설치 — 패키지명은 **`shadcn`** ⭐ 수정
+##### 2. shadcn/ui 설치 — 패키지명은 **`shadcn`** ⭐ 수정
 ```bash
 # 'shadcn-ui'는 폐기됨. 'shadcn'으로 변경됨.
 npx shadcn@latest init
 npx shadcn@latest add button card input form
 ```
 
-#### 3. 폼: shadcn `form` = react-hook-form + Zod ⭐ 일관성 수정
+##### 3. 폼: shadcn `form` = react-hook-form + Zod ⭐ 일관성 수정
 shadcn의 `form`은 **react-hook-form + Zod** 기반이다. 앞서 배운 Zod가 여기서 그대로 쓰인다.
 (raw `useState` 폼은 학습용으로만; 실제 폼은 아래 패턴 권장)
 
@@ -466,22 +626,22 @@ export function LoginForm() {
 }
 ```
 
-#### 실습
+##### 실습
 - [ ] Tailwind 클래스 익히기
 - [ ] `npx shadcn@latest add ...`로 컴포넌트 설치
 - [ ] react-hook-form + Zod로 로그인 폼
 
 ---
 
-## Week 3: 실전 — 인증 + 목록 SPA
+### 4.3 Week 3 — 실전: 인증 + 목록 SPA
 
-### Day 15-18: 쿠키 기반 인증 (BFF) ⭐ 재작성
+#### Day 15-18: 쿠키 기반 인증 (BFF) ⭐ 재작성
 
 > **변경 핵심**: JWT를 **localStorage에 저장하지 않는다.** localStorage는 XSS에 토큰이 노출되기 쉽고,
 > 이 서비스는 얼굴 이미지(개인정보보호법상 민감정보 가능성)를 다루므로 더 보수적으로 간다.
 > 대신 Next Route Handler에서 받은 토큰을 **httpOnly 쿠키**로 굽는다(=JS에서 못 읽음 → XSS에 강함).
 
-#### 흐름
+##### 흐름
 ```
 브라우저 ──(email/pw)──▶ Next Route Handler(/api/auth/login)
                               │  FastAPI에 로그인 요청
@@ -493,7 +653,7 @@ export function LoginForm() {
 서버 컴포넌트/Route Handler가 이후 요청 때 쿠키를 읽어 FastAPI에 Authorization 전달
 ```
 
-#### 로그인 라우트 (쿠키 굽기)
+##### 로그인 라우트 (쿠키 굽기)
 ```ts
 // app/api/auth/login/route.ts
 import { NextResponse } from "next/server";
@@ -524,7 +684,7 @@ export async function POST(request: Request) {
 }
 ```
 
-#### 로그아웃 라우트 (쿠키 삭제)
+##### 로그아웃 라우트 (쿠키 삭제)
 ```ts
 // app/api/auth/logout/route.ts
 import { NextResponse } from "next/server";
@@ -536,7 +696,7 @@ export async function POST() {
 }
 ```
 
-#### 보호 라우트 가드 (middleware)
+##### 보호 라우트 가드 (middleware)
 ```ts
 // middleware.ts
 import { NextResponse, type NextRequest } from "next/server";
@@ -550,19 +710,21 @@ export function middleware(req: NextRequest) {
 export const config = { matcher: ["/analyses/:path*", "/profile"] };
 ```
 
-#### 체크리스트
+##### 체크리스트
 - [ ] 회원가입 페이지(`/auth/register`)
 - [ ] 로그인 페이지(`/auth/login`) + react-hook-form + Zod
 - [ ] `/api/auth/login`·`/logout` Route Handler (httpOnly 쿠키)
 - [ ] AuthContext(현재 사용자 상태만 보관, 토큰은 JS가 안 만짐)
 - [ ] middleware로 보호 라우트 가드
 
-### Day 19-21: API 연동 + 히스토리
+---
+
+#### Day 19-21: API 연동 + 히스토리
 
 > **쿠키 만료/갱신**: 현재는 30분 만료로 설정. v2에서 refreshToken 패턴 도입 예정.
 > (access_token 만료 시 백그라운드 갱신 → 사용자 무중단 경험)
 
-#### 1. TanStack Query 기본 — 클라이언트 측 캐싱/리패칭
+##### 1. TanStack Query 기본 — 클라이언트 측 캐싱/리패칭
 
 서버 컴포넌트로 초기 데이터를 가져오면 좋지만, 클라이언트에서 **캐싱·리패칭·무효화**가 필요할 때
 TanStack Query가 표준 솔루션이다. (Python의 requests.Session + 캐싱과 유사한 역할)
@@ -598,7 +760,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-#### 2. useQuery — 데이터 가져오기 (GET)
+##### 2. useQuery — 데이터 가져오기 (GET)
 
 ```tsx
 "use client";
@@ -645,7 +807,7 @@ export function AnalysesList() {
 }
 ```
 
-#### 3. useMutation — 데이터 변경 (POST/PUT/DELETE)
+##### 3. useMutation — 데이터 변경 (POST/PUT/DELETE)
 
 ```tsx
 "use client";
@@ -702,7 +864,7 @@ export function ImageUploader() {
 }
 ```
 
-#### 4. 에러 처리 + 401 리다이렉트
+##### 4. 에러 처리 + 401 리다이렉트
 
 ```tsx
 "use client";
@@ -737,7 +899,7 @@ export function ProtectedComponent() {
 }
 ```
 
-#### 5. 페이지네이션
+##### 5. 페이지네이션
 
 ```tsx
 "use client";
@@ -774,7 +936,7 @@ export function AnalysesWithPagination() {
 }
 ```
 
-#### 체크리스트
+##### 체크리스트
 - [ ] TanStack Query 설치 + QueryClientProvider 설정
 - [ ] useQuery로 히스토리 목록 가져오기 (+ Zod 검증)
 - [ ] useMutation으로 이미지 업로드 (+ 캐시 무효화)
@@ -785,7 +947,7 @@ export function AnalysesWithPagination() {
 
 ---
 
-## 학습 자료
+## 5. 학습 자료
 
 1. **TypeScript Handbook**: https://www.typescriptlang.org/docs/
 2. **React 공식 문서(Learn React)**: https://react.dev/
@@ -797,7 +959,7 @@ export function AnalysesWithPagination() {
 
 ---
 
-## Python 개발자를 위한 팁
+## 6. Python 개발자를 위한 팁
 
 ### 타입 매핑
 - `Optional[str]` → `string | undefined`(또는 `| null`)
@@ -818,7 +980,7 @@ export function AnalysesWithPagination() {
 
 ---
 
-## 자주 하는 실수
+## 7. 자주 하는 실수
 
 ### 1. `useEffect` 의존성 누락
 ```tsx
@@ -854,7 +1016,7 @@ async function Page({ params }: { params: Promise<{ id: string }> }) { // ✅
 
 ---
 
-## 학습 체크리스트
+## 8. 학습 체크리스트
 
 **TypeScript**: 기본 타입 · 인터페이스/타입 · 함수 타입 · 제네릭 · 유니온 · **Zod 검증**
 **React**: 컴포넌트 · useState · useEffect · Props · Context · 폼(rhf+zod)
@@ -863,9 +1025,38 @@ async function Page({ params }: { params: Promise<{ id: string }> }) { // ✅
 
 ---
 
-## 다음 단계
-1. PLAN.md Phase 1(FastAPI 백엔드)로 이동
-2. 프론트–백엔드 통합 연습(쿠키 인증 + 서버 컴포넌트 fetch)
-3. 실제 프로젝트 적용
+## 9. 산출물
 
-막히면: 공식 문서 → Stack Overflow → AI 도구 → GitHub Issues 순으로.
+1. **인증 + 목록 SPA** (Next.js App Router)
+   - 회원가입/로그인/로그아웃 (httpOnly 쿠키)
+   - 보호 라우트 가드(middleware)
+   - 목록 조회(useQuery + Zod) + 페이지네이션
+   - *백엔드는 mock 또는 임시 FastAPI 스텁으로 대체 가능*
+2. 학습 메모(선택): TS↔Python 타입 매핑, 자주 한 실수 기록
+
+---
+
+## 10. 완료 기준 (Definition of Done)
+
+- [ ] 공식 문서 외 가이드 없이 위 SPA의 **로그인→목록→로그아웃** 플로우를 직접 구현
+- [ ] httpOnly 쿠키 인증 흐름(BFF)을 말로 설명 가능
+- [ ] Server Component / Client Component 구분 기준을 설명 가능
+- [ ] Zod 검증을 "경계에서" 적용하는 이유를 설명 가능
+
+---
+
+## 11. 리스크 / 주의
+
+- **함정 1**: localStorage에 토큰 저장 → XSS 취약. 처음부터 쿠키로 간다.
+- **함정 2**: `params`/`cookies()`를 동기로 취급 → Next 15+ 타입 에러. `await` 필수.
+- **함정 3**: 타입 단언(`as User`) 남용 → 런타임 보장 없음. `Schema.parse()`로.
+- **함정 4**: `useEffect` 의존성 누락 → 갱신 누락. 의존성 배열 점검.
+- **시간 리스크**: Week 3가 가장 무겁다. 막히면 공식문서→SO→AI도구→GitHub Issues 순.
+
+---
+
+## 12. 다음 단계 연결
+
+- Phase 0의 SPA는 **버리는 코드가 아니다.** Phase 4(Next.js 인증/레이아웃)에서
+  쿠키 인증·middleware·TanStack Query 패턴을 그대로 재사용한다.
+- 백엔드 mock으로 연습한 부분은 Phase 1 FastAPI가 완성되면 실제 엔드포인트로 교체.
