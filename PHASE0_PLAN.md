@@ -1,6 +1,6 @@
 # Phase 0 실행계획 — TypeScript / React / Next.js 학습
 
-> **상위 문서**: PLAN.md §10
+> **상위 문서**: PLAN.md §10(개발 단계)
 > **기간(현실안)**: 2–3주
 > **완료 기준**: 간단한 **인증 + 목록 SPA**를 외부 가이드 없이 직접 구현
 > **성격**: 구현이 아니라 **역량 확보** 단계. 이후 Phase 4~7(프론트)의 선행 학습.
@@ -343,6 +343,12 @@ function Card({ title, description, onEdit }: CardProps) {
 ##### 4. Effect (useEffect)
 ```tsx
 import { useEffect, useState } from "react";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
 
 function UserProfile({ userId }: { userId: string }) {
   const [user, setUser] = useState<User | null>(null);
@@ -903,6 +909,7 @@ export function ProtectedComponent() {
 
 ```tsx
 "use client";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 async function fetchAnalysesPage(page: number): Promise<{ data: Analysis[]; total: number }> {
@@ -956,6 +963,7 @@ export function AnalysesWithPagination() {
 5. **TanStack Query**: https://tanstack.com/query/latest
 6. **TailwindCSS**: https://tailwindcss.com/docs
 7. **shadcn/ui**: https://ui.shadcn.com/docs
+8. **React Hook Form**: https://react-hook-form.com/
 
 ---
 
@@ -1059,4 +1067,5 @@ async function Page({ params }: { params: Promise<{ id: string }> }) { // ✅
 
 - Phase 0의 SPA는 **버리는 코드가 아니다.** Phase 4(Next.js 인증/레이아웃)에서
   쿠키 인증·middleware·TanStack Query 패턴을 그대로 재사용한다.
-- 백엔드 mock으로 연습한 부분은 Phase 1 FastAPI가 완성되면 실제 엔드포인트로 교체.
+- 백엔드 mock으로 연습한 부분은 **Phase 1(FastAPI 골격 + 인증)**이 완성되면 실제 엔드포인트로 교체.
+  → [PHASE1_PLAN.md](./PHASE1_PLAN.md) 참조
