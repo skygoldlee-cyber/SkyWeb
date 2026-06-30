@@ -1024,16 +1024,43 @@ async function Page({ params }: { params: Promise<{ id: string }> }) { // ✅
 
 ---
 
-## 8. 학습 체크리스트
+## 8. PWA 기초 학습 (Phase 4~8에서 구현)
+
+PWA(Progressive Web App)는 SkyWeb의 오프라인 접근성과 앱 설치 경험을 위해 필수입니다. Phase 0에서는 개념만 학습합니다.
+
+### PWA 핵심 개념
+- **Service Worker**: 브라우저 백그라운드에서 실행되는 스크립트 (캐싱, 오프라인 지원)
+- **manifest.json**: 앱 메타데이터 (이름, 아이콘, 테마 색상)
+- **HTTPS 필수**: PWA는 HTTPS 환경에서만 동작
+- **설치 가능성**: beforeinstallprompt 이벤트로 앱 설치 경험 제공
+
+### PWA 필요성 (SkyWeb 맥락)
+- 오프라인에서 분석 결과/히스토리 조회 가능
+- 네이티브 앱과 유사한 설치 경험 (앱스토어 승인 없이)
+- 푸시 알림으로 분석 완료/추천 업데이트 알림
+- 서비스 워커 캐싱으로 로딩 속도 개선
+
+### 학습 체크리스트 (PWA)
+- [ ] Service Worker 기본 개념 이해
+- [ ] manifest.json 구조 이해
+- [ ] PWA 설치 흐름 이해 (beforeinstallprompt)
+- [ ] Lighthouse PWA 점수 기준 이해
+
+> 실제 구현은 Phase 4(PWA 기본 설정)부터 Phase 8(PWA 검증 테스트)까지 단계적으로 진행합니다.
+
+---
+
+## 9. 학습 체크리스트
 
 **TypeScript**: 기본 타입 · 인터페이스/타입 · 함수 타입 · 제네릭 · 유니온 · **Zod 검증**
 **React**: 컴포넌트 · useState · useEffect · Props · Context · 폼(rhf+zod)
 **Next.js**: App Router · Server/Client 구분 · 데이터 가져오기 · 동적 라우팅(`await params`) · Route Handler(BFF) · 쿠키 인증 · loading/error
 **스타일링**: Tailwind · shadcn/ui(`shadcn@latest`) · 반응형
+**PWA**: Service Worker · manifest.json · 설치 흐름 · Lighthouse
 
 ---
 
-## 9. 산출물
+## 10. 산출물
 
 1. **인증 + 목록 SPA** (Next.js App Router)
    - 회원가입/로그인/로그아웃 (httpOnly 쿠키)
@@ -1044,7 +1071,7 @@ async function Page({ params }: { params: Promise<{ id: string }> }) { // ✅
 
 ---
 
-## 10. 완료 기준 (Definition of Done)
+## 11. 완료 기준 (Definition of Done)
 
 - [ ] 공식 문서 외 가이드 없이 위 SPA의 **로그인→목록→로그아웃** 플로우를 직접 구현
 - [ ] httpOnly 쿠키 인증 흐름(BFF)을 말로 설명 가능
@@ -1053,7 +1080,7 @@ async function Page({ params }: { params: Promise<{ id: string }> }) { // ✅
 
 ---
 
-## 11. 리스크 / 주의
+## 12. 리스크 / 주의
 
 - **함정 1**: localStorage에 토큰 저장 → XSS 취약. 처음부터 쿠키로 간다.
 - **함정 2**: `params`/`cookies()`를 동기로 취급 → Next 15+ 타입 에러. `await` 필수.
@@ -1063,7 +1090,7 @@ async function Page({ params }: { params: Promise<{ id: string }> }) { // ✅
 
 ---
 
-## 12. 다음 단계 연결
+## 13. 다음 단계 연결
 
 - Phase 0의 SPA는 **버리는 코드가 아니다.** Phase 4(Next.js 인증/레이아웃)에서
   쿠키 인증·middleware·TanStack Query 패턴을 그대로 재사용한다.

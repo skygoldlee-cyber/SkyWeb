@@ -36,14 +36,26 @@ CÔTELEAF 피부분석 서비스의 웹 버전. 사용자가 얼굴 이미지를
 비교 표 전체는 **부록 B**로 분리했다. 본문에는 결정과 근거만 둔다.
 
 ### 프론트엔드 — Next.js + **TypeScript**
-- **스택**: Next.js (App Router) / **TypeScript** / TailwindCSS / shadcn/ui / Lucide React / `next/image`
+- **스택**: Next.js (App Router) / **TypeScript** / TailwindCSS / shadcn/ui / Lucide React / `next/image` / **next-pwa**
 - **상태관리**: 서버 상태는 TanStack Query, 전역 UI 상태는 React Context (필요 시 Zustand)
+- **PWA**: next-pwa로 오프라인 지원, 앱 설치 경험, 푸시 알림 제공
 - **근거**: React 생태계·이미지 최적화 내장·향후 React Native 확장 여지.
 - **TypeScript를 선택한 이유 (이전 안의 JS 권장을 뒤집음)**:
   Python을 주력으로 쓰고 이미 **type hints + Pydantic**에 익숙하므로 TS 타입 시스템은 오히려 친숙한 영역이다.
   shadcn/ui·Next.js 생태계가 TS를 기본 전제로 하므로 JS로 가면 예제·문서와 어긋나 학습 부담이 **더** 커진다.
   컴파일 타임 타입 에러는 입문자의 디버깅 부담을 줄여준다.
 - **포기한 것**: Svelte/Solid의 더 작은 번들·빠른 렌더링. v1 규모에서 체감 이득이 작고 생태계·자료가 얇아 1인 유지보수에 불리.
+
+### PWA (Progressive Web App)
+- **스택**: next-pwa / Service Worker / manifest.json / Notification API
+- **기능**: 오프라인 지원, 앱 설치 경험, 푸시 알림
+- **단계별 구현**:
+  - Phase 1: 기본 PWA 설정 (manifest.json, Service Worker 등록, HTTPS)
+  - Phase 2: 오프라인 지원 (정적 리소스 캐싱, 오프라인 폴백 페이지)
+  - Phase 3: 설치 가능성 (beforeinstallprompt 이벤트, 설치 버튼)
+  - Phase 4: 푸시 알림 (Notification API, 백엔드 연동)
+  - Phase 5: 검증 테스트 (Lighthouse 점수 90+, 브라우저 호환성)
+- **근거**: 오프라인 접근성, 네이티브 앱과 유사한 설치 경험, 푸시 알림으로 사용자 유지
 
 ### 백엔드 — FastAPI (Python)
 - **스택**: Python 3.10+ / FastAPI / SQLAlchemy 2.x + Alembic / Pydantic v2 / python-jose(JWT) / passlib(bcrypt)
@@ -260,6 +272,7 @@ DELETE /api/user/account       계정 삭제 (관련 이미지/분석 파기 포
 4. **추천** — v1은 점수 구간 기반 규칙 추천, v2에서 고도화
 5. **히스토리** — 과거 결과 조회, 기간별 변화 추이 그래프, 비교
 6. **관리자(최소)** — SQLAdmin 기반 조회/통계
+7. **PWA** — 오프라인 지원, 앱 설치 경험, 푸시 알림
 
 ---
 

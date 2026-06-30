@@ -127,3 +127,23 @@ pip install fastapi uvicorn[standard] sqlalchemy alembic pydantic-settings passl
 
 - Phase 2(업로드)는 이 앱에 `/api/v1/analyses` 라우터와 `analyses` 모델을 추가한다.
 - Phase 4(프론트)의 BFF 로그인 라우트가 여기 `/api/v1/auth/login`을 호출한다 → **응답 형태(`{access_token, user}`) 계약 고정**.
+
+---
+
+## 7. PWA 통합 고려사항 (백엔드 관점)
+
+Phase 1은 백엔드 단계이지만, PWA 통합을 위해 다음 사항을 고려합니다.
+
+### PWA와 백엔드 통합 포인트
+- **HTTPS 필수**: PWA는 HTTPS 환경에서만 동작하므로 백엔드는 HTTPS 강제 설정 필요
+- **CORS 설정**: PWA가 다른 도메인에서 실행될 경우를 대비한 CORS 화이트리스트 구성
+- **푸시 알림 준비**: Phase 4 이후 푸시 알림 구현을 위한 백엔드 엔드포인트 설계 여지
+- **오프라인 지원**: PWA의 오프라인 캐싱과 백엔드 API의 일관성 유지
+
+### 검증 체크리스트 (백엔드)
+- [ ] HTTPS 강제 설정 (`SECURE_SSL_REDIRECT`, `HSTS`)
+- [ ] CORS 화이트리스트 설정 (개발: localhost:3000, 운영: 도메인)
+- [ ] API 응답 캐싱 헤더 고려 (PWA Service Worker 캐싱과 정합)
+- [ ] 푸시 알림용 엔드포인트 설계 (Phase 4 이후 구현)
+
+> 실제 PWA 구현은 Phase 4(프론트)에서 시작됩니다.

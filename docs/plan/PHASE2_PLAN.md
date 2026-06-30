@@ -115,3 +115,23 @@ pip install boto3 redis celery  # S3/R2, Redis, Celery (Phase 3에서 사용)
 - Phase 3 워커가 이 큐의 메시지를 소비해 `processing → done/failed`로 전이시키고 결과를 채운다.
 - `options` 페이로드 스키마는 Phase 3의 `AnalysisService.analyze(options=...)` 입력 계약과 **반드시 일치**시킬 것.
 - enqueue 추상화(`enqueue_analysis`)는 Phase 3에서 Celery로 구현만 교체됨 → 인터페이스 고정 중요
+
+---
+
+## 7. PWA 통합 고려사항 (업로드/스토리지 관점)
+
+Phase 2는 업로드/스토리지 단계이지만, PWA 통합을 위해 다음 사항을 고려합니다.
+
+### PWA와 업로드/스토리지 통합 포인트
+- **오프라인 업로드 지원**: PWA 오프라인 상태에서 이미지 선택 → 온라인 시 자동 업로드 (Background Sync API)
+- **캐싱 전략**: 업로드된 이미지는 PWA 캐싱에서 제외 (용량/개인정보 보호)
+- **서명 URL 만료**: PWA 오프라인 캐싱과 서명 URL 만료 시간 정합
+- **진행 상태 알림**: 업로드 진행 상태를 PWA 푸시 알림으로 전달 가능성 (Phase 4 이후)
+
+### 검증 체크리스트 (업로드/스토리지)
+- [ ] 업로드 파일 크기 제한 (PWA 오프라인 저장소 고려)
+- [ ] 서명 URL 만료 시간 설정 (PWA 캐싱 정합)
+- [ ] Background Sync API 준비 (오프라인 업로드 대기열)
+- [ ] 업로드 진행 상태 API (PWA 푸시 알림 연동)
+
+> 실제 PWA 구현은 Phase 4(프론트)에서 시작됩니다.
