@@ -4,6 +4,8 @@
 > **기간(현실안)**: 2주
 > **완료 기준**: 운영 배포 + 비밀키 점검 + PIPA 동의 흐름
 > **성격**: 출시 게이트. 특히 **얼굴 이미지 = 민감정보** 대응은 출시 전 필수.
+>
+> **🔄 v2 개정(PWA 리뷰 반영)**: "Lighthouse PWA 점수 90+"는 **무효 기준**(Lighthouse v12.0/2024-05에서 PWA 카테고리 제거됨) → DevTools Application 패널 + 수동 시나리오 + **보안 회귀(캐시 잔존)** 검증으로 교체. 푸시 알림은 v2로 분리. 상세는 `SkyWeb_PWA_리뷰_및_보완.md` 참조.
 
 ---
 
@@ -52,14 +54,16 @@ pip install python-dotenv  # 환경 변수
 - [ ] Rate Limiting, 입력 검증(Pydantic), 업로드 타입/크기 검증
 - [ ] 서명된 S3/R2 URL만 노출(직접 공개 금지), 인증 없는 작업 엔드포인트 0건(IDOR/Path traversal 점검)
 
-### 2.3 PWA 검증 테스트 (Phase 5: 검증 테스트)
-- [ ] **Lighthouse PWA 점수 90+ 달성**: Chrome DevTools → Lighthouse → Progressive Web App
-- [ ] 다양 브라우저 호환성 테스트 (Chrome, Safari, Edge)
-- [ ] 오프라인/온라인 전환 시나리오 테스트
-- [ ] PWA 설치 경험 테스트 (beforeinstallprompt 이벤트)
-- [ ] 푸시 알림 동작 테스트 (권한 요청, 수신, 클릭)
-- [ ] 오프라인 캐싱 정책 검증 (정적 리소스, 결과 데이터)
-- [ ] HTTPS 환경에서 PWA 설치 가능 확인
+### 2.3 PWA 검증 테스트 (개정 — Lighthouse PWA 점수 폐지 반영)
+> Lighthouse는 v12.0(2024-05)에서 PWA 카테고리를 제거했다. 아래 기준으로 대체한다.
+- [ ] **DevTools Application → Manifest**: 필드·아이콘(maskable 포함) 인식, 설치 가능 표시
+- [ ] **DevTools Application → Service Workers**: 등록·활성·업데이트 흐름 정상
+- [ ] **설치 시나리오**: Android Chrome 설치 / iOS Safari "홈 화면에 추가" 수동 흐름 확인
+- [ ] **오프라인 시나리오**: 네트워크 차단 시 앱 셸 + `/~offline`만 노출, **분석 결과·이미지·`/api`가 캐시에서 나오지 않음**(Cache Storage 검사)
+- [ ] **보안 회귀(중요)**: 로그아웃/계정 삭제 후 Cache Storage·IndexedDB에 사용자 데이터·이미지 잔존 0건
+- [ ] **업데이트**: 새 빌드 배포 시 흰 화면 없이 갱신(사용자 안내 reload), `reloadOnOnline:false` 확인
+- [ ] (성능) 일반 Lighthouse **Performance** 점수는 별도 관리 — PWA 카테고리는 더 이상 존재하지 않음
+- [ ] *(푸시 알림은 v2로 분리 — Web Push(VAPID)+구독 저장 필요, iOS는 설치 PWA+16.4↑ 한정. v1 범위 제외)*
 
 ### 2.4 개인정보 / 규제 (§8 — 출시 전 결정)
 - [ ] **PIPA 우선**: 얼굴 이미지 = 생체/민감정보 가능성 → 처리 흐름 정비
@@ -67,6 +71,7 @@ pip install python-dotenv  # 환경 변수
   - [ ] 가입/업로드 시 동의 UI + `consented_at` 저장
   - [ ] 암호화 저장, 보존기간(`retention_until`) + **자동 파기** 배치/잡
   - [ ] 계정 삭제(`DELETE /api/v1/user/account`) 시 관련 이미지/분석 파기 검증
+  - [ ] **로그아웃·계정 삭제 시 클라이언트 캐시 정리**: `caches` 전체 삭제 + `Clear-Site-Data` 헤더(서버) — PWA 캐시에 민감정보 잔존 방지(§2.3 보안 회귀와 연동)
 - [ ] **의료기기/의료행위 회피**: 전 화면 문구를 "분석/측정/추정"으로 통일, "진단" 0건 점검
 - [ ] 처리방침·이용약관 게시(§11 프로덕션 전)
 
@@ -112,7 +117,7 @@ pip install python-dotenv  # 환경 변수
 2. 보안 점검 결과(시크릿 0건·IDOR 0건 체크리스트)
 3. PIPA 동의·파기 흐름(동의 UI + 보존/파기 잡)
 4. 운영 배포(프론트/API/워커/DB/Redis/스토리지) + CI/CD
-5. PWA 검증 테스트 결과 (Lighthouse 점수 90+, 브라우저 호환성, 오프라인 지원)
+5. PWA 검증 결과 (설치 가능성·오프라인 폴백·브라우저 호환성 + **민감정보 비캐시·로그아웃 캐시 정리** 회귀)
 
 ---
 
@@ -123,9 +128,10 @@ pip install python-dotenv  # 환경 변수
 - [ ] 얼굴 이미지 처리 동의 흐름 동작 + 보존기간 만료 파기 동작
 - [ ] 전 화면 "진단" 표현 0건
 - [ ] CI에서 엔진 모킹 테스트가 무거운 모델 없이 통과
-- [ ] Lighthouse PWA 점수 90+ 달성
-- [ ] 다양 브라우저에서 PWA 설치/동작 확인
-- [ ] 오프라인/온라인 전환 시나리오 테스트 통과
+- [ ] DevTools Application 패널에서 설치 가능성·SW 정상 확인 (Lighthouse PWA 점수는 폐지됨)
+- [ ] Android 설치 / iOS "홈 화면에 추가" 수동 흐름 확인
+- [ ] 오프라인 시 앱 셸+`/~offline`만 동작, `/api`·이미지 캐시 미적재 확인
+- [ ] **로그아웃/계정 삭제 후 캐시·IndexedDB에 사용자 데이터 잔존 0건**
 
 ---
 
@@ -136,6 +142,7 @@ pip install python-dotenv  # 환경 변수
 - **워커 비용**: 워커 호스트가 비용의 핵심 변수. 보급형 저메모리 티어 OOM 주의 → 실측 후 사양 확정.
 - **표현 규제**: "진단" 한 단어가 의료기기 규제 영역을 건드릴 수 있다 → 전수 점검.
 - **테스트 신뢰성**: 전역 상태 오염으로 인한 거짓 통과/실패 방지(conftest 위생).
+- **PWA 캐시 회귀(놓치기 쉬움)**: 로그아웃 후 Cache Storage에 민감 데이터 잔존은 사람이 놓치기 쉬움 → E2E(Playwright)로 "로그아웃 후 캐시 비어 있음"을 자동 검증 권장.
 
 ---
 
